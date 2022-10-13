@@ -11,13 +11,11 @@ library PriceConverter {
         (
             ,
             /*uint80 roundID*/
-            int256 price, /*uint startedAt*/
+            int256 price, /*uint startedAt*/ /*uint timeStamp*/ /*uint80 answeredInRound*/
             ,
             ,
 
-        ) = /*uint timeStamp*/
-            /*uint80 answeredInRound*/
-            priceFeed.latestRoundData();
+        ) = priceFeed.latestRoundData();
 
         return uint256(price * 10**10);
     }

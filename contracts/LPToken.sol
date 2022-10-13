@@ -3,11 +3,15 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "./PriceConverter.sol";
 
 //Define a contract named 'LPToken' that inherits the OpenZeppelin `ERC20` and `ERC20Detailed` contracts.
 //solidity
 contract LPToken is ERC20 {
     address payable public owner;
+
+    using PriceConverter for uint256;
 
     modifier onlyOwner() {
         require(
@@ -26,7 +30,8 @@ contract LPToken is ERC20 {
     receive() external payable {}
 
     function LPToEth(uint256 amount) public pure returns (uint256) {
-        // 1Eth = 1000 LP
+        // 1Eth = 1000 LP = $1299
+        // i.e 1LP = $1.299
         return (amount * 10**18) / 1000;
     }
 
@@ -38,8 +43,15 @@ contract LPToken is ERC20 {
     function mint() public payable {
         require(msg.value >= 10 * 10**14);
         bool success = payable(address(this)).send(msg.value);
-        require(success, "Call Failed");
+        require(success, "Call Failed to mint inside");
         _mint(msg.sender, EthToLP(msg.value));
+    }
+
+    function mint(uint256 eth) public payable {
+        require(eth >= 10 * 10**14);
+        bool success = payable(address(this)).send(eth);
+        require(success, "Call Failed");
+        _mint(msg.sender, EthToLP(eth));
     }
 
     // Function to get back Eth
