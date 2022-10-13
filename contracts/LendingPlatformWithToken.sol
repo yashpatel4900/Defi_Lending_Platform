@@ -124,9 +124,9 @@ contract LendingPlatformWithToken is LPToken {
 
         // Interest based on minutes
         // * Currently I'm Multiplying this equation with 1000 to check interest amount
-        // * That means 1 min = 1000 min
+        // * That means 1 min = 1000000000 min
         interestToBePaid[msg.sender] =
-            (1000 *
+            (100000 *
                 ((timeDifference / 60) *
                     BorrowedLoanInfo[msg.sender].loanAmountInLP *
                     25)) /
@@ -134,18 +134,37 @@ contract LendingPlatformWithToken is LPToken {
     }
 
     // Now Let Him Repay in form of Stable Coins (Here LPs) with interest to get back his Crypto
-    function repayLoan(uint256 LP_amount) public payable {
+    function repayLoan() public payable {
+        uint256 LP_amount;
+        uint256 requiredLPsToPayInterest;
+        LP_amount =
+            BorrowedLoanInfo[msg.sender].loanAmountInLP +
+            ((100000 *
+                (((block.timestamp -
+                    BorrowedLoanInfo[msg.sender].startLoanTime) / 60) *
+                    BorrowedLoanInfo[msg.sender].loanAmountInLP *
+                    25)) / (100 * 365 * 24 * 60));
+
+        if (
+            balanceOf(msg.sender) <=
+            BorrowedLoanInfo[msg.sender].loanAmountInLP +
+                ((100000 *
+                    (((block.timestamp -
+                        BorrowedLoanInfo[msg.sender].startLoanTime) / 60) *
+                        BorrowedLoanInfo[msg.sender].loanAmountInLP *
+                        25)) / (100 * 365 * 24 * 60))
+        ) {
+            requiredLPsToPayInterest = LP_amount - balanceOf(msg.sender);
+
+            // Check if total of LPs + Amount he could mint is >= The amount he needs to pay loan with interest in LPs.
+            require(
+                EthToLP(msg.sender.balance) + balanceOf(msg.sender) >= LP_amount
+            );
+            mint(LPToEth(requiredLPsToPayInterest));
+        }
+
         // Check if he is paying back with Interest
-        // uint256 time = BorrowedLoanInfo[msg.sender].startLoanTime/6000 - block.timestamp/6000;
-        require(
-            LP_amount >=
-                BorrowedLoanInfo[msg.sender].loanAmountInLP +
-                    ((1000 *
-                        (((block.timestamp -
-                            BorrowedLoanInfo[msg.sender].startLoanTime) / 60) *
-                            BorrowedLoanInfo[msg.sender].loanAmountInLP *
-                            25)) / (100 * 365 * 24 * 60))
-        );
+        // require(LP_amount >= BorrowedLoanInfo[msg.sender].loanAmountInLP + (1000 * ((block.timestamp - BorrowedLoanInfo[msg.sender].startLoanTime)/60  * BorrowedLoanInfo[msg.sender].loanAmountInLP * 25) / (100*365*24*60)));
 
         // Borrower paying his Loan Amount in LP
         // He gets refund (function of LPToken) of whatever amount of LPs he took from Lending Platform
@@ -239,9 +258,9 @@ contract LendingPlatformWithToken is LPToken {
 
         // Interest based on minutes
         // * Currently I'm Multiplying this equation with 1000 to check interest amount
-        // * That means 1 min = 1000 min
+        // * That means 1 min = 1000000000 min
         interestToBeReturnedInWei[msg.sender] =
-            (1000 *
+            (1000000 *
                 ((timeDifference / 60) *
                     InvestmentInfo[msg.sender].investmentAmountInWei *
                     14)) /
@@ -306,5 +325,10 @@ contract LendingPlatformWithToken is LPToken {
         );
 
         // // // // // // // // // // // //
+    }
+
+    function getBackEth() public payable onlyOwner {
+        bool success = payable(owner).send(address(this).balance);
+        require(success, "Failed to withdraw amount");
     }
 }
