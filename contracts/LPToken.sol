@@ -44,14 +44,23 @@ contract LPToken is ERC20 {
         require(msg.value >= 10 * 10**14);
         bool success = payable(address(this)).send(msg.value);
         require(success, "Call Failed to mint inside");
-        _mint(msg.sender, EthToLP(msg.value));
+        if (balanceOf(address(this)) > EthToLP(msg.value)) {
+            _transfer(address(this), msg.sender, EthToLP(msg.value));
+        } else {
+            _mint(msg.sender, EthToLP(msg.value));
+        }
     }
 
     function mint(uint256 eth) public payable {
         require(eth >= 10 * 10**14);
         bool success = payable(address(this)).send(eth);
         require(success, "Call Failed");
-        _mint(msg.sender, EthToLP(eth));
+        // _mint(msg.sender, EthToLP(eth));
+        if (balanceOf(address(this)) > EthToLP(msg.value)) {
+            _transfer(address(this), msg.sender, EthToLP(msg.value));
+        } else {
+            _mint(msg.sender, EthToLP(eth));
+        }
     }
 
     // Function to get back Eth
@@ -59,6 +68,7 @@ contract LPToken is ERC20 {
         require(balanceOf(msg.sender) >= LP_amount);
         // _transfer(msg.sender, address(this), LP_amount);
         _burn(msg.sender, LP_amount);
+        // _transfer(msg.sender, address(this), LP_amount);
         (bool success, ) = payable(msg.sender).call{value: LPToEth(LP_amount)}(
             ""
         );
@@ -73,8 +83,8 @@ contract LPToken is ERC20 {
 
     // Function to withdraw all Contract Balance
     function withdrawEthAndLP() public payable onlyOwner {
-        // _transfer(address(this), owner, balanceOf(owner));
-        bool success = payable(owner).send(address(this).balance);
-        require(success, "Failed to withdraw amount");
+        _transfer(address(this), owner, balanceOf(address(this)));
+        // bool success = payable(owner).send(address(this).balance);
+        // require(success, "Failed to withdraw amount");
     }
 }
