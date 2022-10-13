@@ -38,13 +38,18 @@ contract LPToken is ERC20 {
     // // // // // // // //
 
     function LPToEth(uint256 amount) public pure returns (uint256) {
-        // 1Eth = 1000 LP = $1299
+        // 1Eth = 10**18 Wei
+        // 10**18 Wei = 1000 *10**18 LP
+        // Wei = 1000 LP
+        // 1 LP = 1/10**3 Wei
+        // 1Eth = 1000 *10**18 LP = $1299
         // i.e 1LP = $1.299
-        return (amount * 10**18) / 1000;
+        // return amount*10**18/1000;
+        return (amount / 1000);
     }
 
     function EthToLP(uint256 amount) public pure returns (uint256) {
-        return (amount * 1000) / 10**18;
+        return amount * 1000;
     }
 
     // Function to buy LP
@@ -147,8 +152,8 @@ contract LPToken is ERC20 {
     }
 
     // Function to Deposit
-    function addContractFunds() public payable {
-        (bool success, ) = payable(address(this)).call{value: msg.value}("");
+    function addContractFunds(uint256 amt) public payable {
+        (bool success, ) = payable(address(this)).call{value: amt}("");
         require(success, "Failed to deposit");
     }
 

@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lending Platform</title>
+  </head>
+  <body>
+    <div>
+      <h1>Wallet Information</h1>
+      <p>Connected Wallet Address: <span id="walletAddress"> </span></p>
+      <p>Connected Wallet's LP Balance: <span id="myLPBalance"> </span></p>
+    </div>
+
+    <br />
+
+    <div>
+      <h1>Lending Platform Details</h1>
+      <p>Contract Address is: 0xcc22E2d7EC063eE495a52F77892b2C4CcF5F75BB</p>
+      <p>Current Contract Balance: <span id="contractBalance"> </span></p>
+      <p>
+        Current Contract LP Token Balance: <span id="contractLPBalance"> </span>
+      </p>
+    </div>
+
+    <br />
+
+    <div>
+      <h1>ERC20 LP Token Minting Section</h1>
+      <p>
+        Enter ETH amount. Click Buttons to call their respective functions based
+        on your input value.
+      </p>
+      <input type="text" id="ethToMint" />
+      <button id="ethToLP">Calculate Mintable LP</button>
+      <span id="LPAmount"></span>
+      <br />
+      <br />
+      <button id="mint">Mint</button>
+      <p id="mintStatus"></p>
+      <br />
+      <br />
+      <input type="text" id="returnLP" /><br />
+      <button id="return">Return</button>
+      <p id="returnStatus"></p>
+    </div>
+
+    <br />
+
+    <div>
+      <h1>Borrower's Section</h1>
+
+      <input type="text" id="depositAmount" />
+      <button id="deposit">Deposit</button>
+      <p id="depositStatus"></p>
+
+      <br /><br />
+
+      <button id="checkLoanInfo">Loan Details</button>
+      <p id="loanInfo"></p>
+
+      <br /><br />
+
+      <button id="calculateInterest">
+        Calculate Interest to be Paid (in LP)
+      </button>
+      <p id="calculatedInterest"></p>
+      <p id="calculatedInterestAmount"></p>
+
+      <br /><br />
+
+      <button id="repay">Repay</button>
+      <p id="repayStatus"></p>
+
+      <br /><br />
+    </div>
+
+    <br />
+
+    <div>
+      <h1>Lender's Section</h1>
+
+      <input type="text" id="investAmount" />
+      <button id="invest">Invest</button>
+      <p id="investStatus"></p>
+
+      <br /><br />
+
+      <button id="checkInvestmentInfo">Investment Details</button>
+      <p id="InvestmentInfo"></p>
+
+      <br /><br />
+
+      <button id="calculateInvestmentInterest">
+        Calculate Interest on Investment
+      </button>
+      <p id="calculatedInvestmentInterest"></p>
+      <p id="calculatedInvestmentInterestAmount"></p>
+
+      <br /><br />
+
+      <button id="getCryptoBackWithInterest">
+        Get Back Investment Along With Interest
+      </button>
+      <p id="getCryptoBackWithInterestStatus"></p>
+
+      <br /><br />
+    </div>
+
+    <div>
+      <h1>Only Owner's Section</h1>
+      <!-- addContractFunds(amt) -->
+      <!-- withdrawEthAndLP  - Withdraws only LPs -->
+      <!-- getBackEth - Withdraws All Eth from Contract -->
+
+      <input type="text" id="investAmount" />
+      <button id="addFunds">Add Funds</button>
+      <p id="fundingStatus"></p>
+
+      <br /><br />
+
+      <button id="withdrawLP">Withdraw LP from Contract</button>
+      <p id="withdrawLPStatus"></p>
+
+      <br /><br />
+
+      <button id="withdrawETH">Withdraw ETH from Contract</button>
+      <p id="withdrawETHStatus"></p>
+    </div>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.36/dist/web3.min.js"></script>
+    <!-- <script
+      src="https://code.jquery.com/jquery-3.3.1.s1im.min.js"
+      crossorigin="anonymous"
+    ></script> -->
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      let contract;
+      let address = "0xcc22E2d7EC063eE495a52F77892b2C4CcF5F75BB";
+      let abi = [
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amt",
+              type: "uint256",
+            },
+          ],
+          name: "addContractFunds",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "approve",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "calculateInterest",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          stateMutability: "payable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "Approval",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "calculateInterestToBeReturnedToInvester",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "subtractedValue",
+              type: "uint256",
+            },
+          ],
+          name: "decreaseAllowance",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amt",
+              type: "uint256",
+            },
+          ],
+          name: "deposit",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getBackEth",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getCryptoBackWithInterest",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getMyLoanInterest",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "addedValue",
+              type: "uint256",
+            },
+          ],
+          name: "increaseAllowance",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amt",
+              type: "uint256",
+            },
+          ],
+          name: "invest",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "mint",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "eth",
+              type: "uint256",
+            },
+          ],
+          name: "mint",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "LP_amount",
+              type: "uint256",
+            },
+          ],
+          name: "refund",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "repayLoan",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "transfer",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "Transfer",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "transferFrom",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "withdrawEthAndLP",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "addressToInvestmentAmountInWei",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "addressToLoanAmount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "addressToTransferableLP",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+          ],
+          name: "allowance",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "balanceOf",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "BorrowedLoanInfo",
+          outputs: [
+            {
+              internalType: "address",
+              name: "borrowedBy",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "startLoanTime",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "amountWithLPInWei",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "loanApprovedOfInDollar",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "loanApprovedOfInWei",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "loanAmountInLP",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "payed",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "borrowers",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "decimals",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "EthToLP",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getContractBalance",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getContractLPBalance",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getMyLPBalance",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "interestToBePaid",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "interestToBeReturnedInWei",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "investers",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "InvestmentInfo",
+          outputs: [
+            {
+              internalType: "address",
+              name: "investedBy",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "investmentAmountInWei",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "startInvestmentTime",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "amountOfLPGenerated",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "ApproxInterestGained",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "didLPReturnedWithProfit",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "LPToEth",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "LPTokenContract",
+          outputs: [
+            {
+              internalType: "contract LPToken2",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "name",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address payable",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "symbol",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalBorrowers",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalInvester",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalSupply",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ];
+
+      let account;
+
+      window.addEventListener("load", async () => {
+        if (typeof ethereum === "undefined") {
+          console.log("Metamask not connected.");
+          return;
+        }
+        web3 = new Web3(window.ethereum); // initialize Web3
+        const accounts = await ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const account = accounts[0];
+        $("#walletAddress").html(accounts[0]);
+        const contract = new web3.eth.Contract(abi, address);
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        contract.methods
+          .getContractBalance()
+          .call()
+          .then(function (e) {
+            $("#contractBalance").html(e / 10 ** 18);
+          });
+
+        contract.methods
+          .getContractLPBalance()
+          .call()
+          .then(function (e) {
+            $("#contractLPBalance").html(e / 10 ** 18);
+          });
+
+        contract.methods
+          .getMyLPBalance()
+          .call({ from: account })
+          .then(function (e) {
+            $("#myLPBalance").html(e / 10 ** 18);
+            console.log("My LP Balance: " + e);
+          });
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        // ERC20 LP Token Minting Section
+        //   View Eth to LP
+        $("#ethToLP").click(function () {
+          contract.methods
+            .EthToLP(parseInt($("#ethToMint").val() * 10 ** 18).toString())
+            .call()
+            .then(function (e) {
+              console.log(parseInt($("#ethToMint").val()));
+              $("#LPAmount").html(e / 10 ** 18);
+              console.log(e);
+            });
+        });
+
+        // Mint
+        $("#mint").click(async () => {
+          console.log(account);
+          contract.methods
+            .mint((parseFloat($("#ethToMint").val()) * 10 ** 18).toString())
+            .send({
+              from: account,
+              value: (parseFloat($("#ethToMint").val()) * 10 ** 18).toString(),
+            })
+            .then(function (e) {
+              $("#mintStatus").html(
+                "Successfully LP Minted. Check your Wallet for LP Tokens"
+              );
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+            });
+        });
+
+        // Return LPs In order to get Crypto
+        $("#return").click(function () {
+          contract.methods
+            .refund(parseInt($("#returnLP").val() * 10 ** 18).toString())
+            .send({ from: account })
+            .then(function (e) {
+              $("#returnStatus").html(
+                "Successfully returned LPs. Check Wallet, Eth would have been received."
+              );
+              console.log(e);
+            });
+        });
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Borrower's Section
+
+        // Deposit
+        $("#deposit").click(async () => {
+          console.log(account);
+          contract.methods
+            .deposit(
+              (parseFloat($("#depositAmount").val()) * 10 ** 18).toString()
+            )
+            .send({
+              from: account,
+              value: (
+                parseFloat($("#depositAmount").val()) *
+                10 ** 18
+              ).toString(),
+            })
+            .then(function (e) {
+              $("#depositStatus").html(
+                "Successfully Deposited. You have received loan on 50% of Deposited ETH. (in form of LP)"
+              );
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+            });
+        });
+
+        // Check Loan Info
+        $("#checkLoanInfo").click(function () {
+          contract.methods
+            .BorrowedLoanInfo(account)
+            .call({ from: account })
+            .then(function (e) {
+              console.log(e);
+              $("#loanInfo").html(
+                "Borrowed By: " +
+                  e.borrowedBy +
+                  ",         Loan given at (timestamp): " +
+                  e.startLoanTime +
+                  ",         Loan Amount (in LP): " +
+                  e.loanAmountInLP
+              );
+            });
+        });
+
+        // Caculate Interest
+        $("#calculateInterest").click(function () {
+          contract.methods
+            .calculateInterest()
+            .send({ from: account })
+            .then(function (e) {
+              console.log(e);
+              $("#calculatedInterest").html(
+                "Interest to be paid (in LP): " +
+                  contract.methods
+                    .interestToBePaid(account)
+                    .call({ from: account })
+                    .then(function (i) {
+                      $("#calculatedInterestAmount").html(
+                        (i / 10 ** 18).toString()
+                      );
+                    })
+                    .catch(function (err) {
+                      console.error(err);
+                    })
+              );
+            });
+        });
+
+        // Repay
+        $("#repay").click(async () => {
+          console.log(account);
+          contract.methods
+            .repayLoan()
+            .send({ from: account })
+            .then(function (e) {
+              $("#repayStatus").html(
+                "Successfully Repayed. Colleteral has been released to your acount."
+              );
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+              $("#repayStatus").html(
+                "Repayment of Loan Failed. You do not have sufficient Funds to Repay Loan."
+              );
+            });
+        });
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Lender's Section
+
+        // Invest
+        // Deposit
+        $("#invest").click(async () => {
+          console.log(account);
+          contract.methods
+            .invest(
+              (parseFloat($("#investAmount").val()) * 10 ** 18).toString()
+            )
+            .send({
+              from: account,
+              value: (
+                parseFloat($("#investAmount").val()) *
+                10 ** 18
+              ).toString(),
+            })
+            .then(function (e) {
+              $("#investStatus").html(
+                "Successfully Invested. LPs generated from the Investment will now be used by others to Borrow."
+              );
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+              $("#investStatus").html(
+                "Investment Failed. You can only invest amount lesser than your wallet balance."
+              );
+            });
+        });
+
+        // Investment Details
+        $("#checkInvestmentInfo").click(function () {
+          contract.methods
+            .InvestmentInfo(account)
+            .call({ from: account })
+            .then(function (e) {
+              console.log(e);
+              $("#InvestmentInfo").html(
+                "Invested By: " +
+                  e.investedBy +
+                  ",         Investment given at (timestamp): " +
+                  e.startInvestmentTime +
+                  ",         Invested Amount (in ETH): " +
+                  e.investmentAmountInWei / 10 ** 18 +
+                  ",         Amount of LP Generated from Investment: " +
+                  e.amountOfLPGenerated / 10 ** 18
+              );
+            });
+        });
+
+        // Calculate Interest of Investment
+        $("#calculateInvestmentInterest").click(function () {
+          contract.methods
+            .calculateInterestToBeReturnedToInvester()
+            .send({ from: account })
+            .then(function (e) {
+              console.log(e);
+              $("#calculatedInvestmentInterest").html(
+                "Interest Gained from Investment (in ETH): " +
+                  contract.methods
+                    .interestToBeReturnedInWei(account)
+                    .call({ from: account })
+                    .then(function (i) {
+                      $("#calculatedInvestmentInterestAmount").html(
+                        (i / 10 ** 18).toString()
+                      );
+                    })
+                    .catch(function (err) {
+                      console.error(err);
+                    })
+              );
+            });
+        });
+
+        // Get Back Invested Crypto with Interest
+        $("#getCryptoBackWithInterest").click(async () => {
+          console.log(account);
+          contract.methods
+            .getCryptoBackWithInterest()
+            .send({ from: account })
+            .then(function (e) {
+              $("#getCryptoBackWithInterestStatus").html(
+                "Successfully Withdrawed your Investment with Interest."
+              );
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+              $("#getCryptoBackWithInterestStatus").html(
+                "Withdrawal was Unsuccessful at this time. Please try again after some time when LP has sufficient funds to pay you."
+              );
+            });
+        });
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Only Owner's Section
+
+        // Add Funds
+        $("#addFunds").click(async () => {
+          console.log(account);
+          contract.methods
+            .addContractFunds(
+              (parseFloat($("#investAmount").val()) * 10 ** 18).toString()
+            )
+            .send({
+              from: account,
+              value: (
+                parseFloat($("#investAmount").val()) *
+                10 ** 18
+              ).toString(),
+            })
+            .then(function (e) {
+              $("#fundingStatus").html("Successfully Funded.");
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+            });
+        });
+
+        // Withdraw LP
+        $("#withdrawLP").click(async () => {
+          console.log(account);
+          contract.methods
+            .withdrawEthAndLP()
+            .send({ from: account })
+            .then(function (e) {
+              $("#withdrawLPStatus").html(
+                "Successfully Withdrawed LPs from Contract Address."
+              );
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+              $("#withdrawLPStatus").html(
+                "Withdrawal of LP from contract was Unsuccessful at this time"
+              );
+            });
+        });
+
+        // Withdraw Eth
+        $("#withdrawETH").click(async () => {
+          console.log(account);
+          contract.methods
+            .getBackEth()
+            .send({ from: account })
+            .then(function (e) {
+              $("#withdrawETHStatus").html(
+                "Successfully Withdrawed ETH from Contract Address."
+              );
+              console.log(e);
+            })
+            .catch(function (e) {
+              console.log(e);
+              $("#withdrawETHStatus").html(
+                "Withdrawal of ETH from contract was Unsuccessful at this time"
+              );
+            });
+        });
+      });
+    </script>
+  </body>
+</html>

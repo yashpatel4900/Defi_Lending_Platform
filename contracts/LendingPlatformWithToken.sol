@@ -71,7 +71,7 @@ contract LendingPlatformWithToken is LPToken {
 
     // Lets first build Functionality for Borrower
     // He will pay crypto to get stable coin (Here LP)
-    function deposit() public payable {
+    function deposit(uint256 amt) public payable {
         // Check if he hasn't taken any loan before
         require(addressToLoanAmount[msg.sender] == 0);
 
@@ -80,18 +80,18 @@ contract LendingPlatformWithToken is LPToken {
         // First he has to Pay.
         // 1. Half Amount will be transferd directly to Contract.
         // 2. Second Half through minting.
-        bool success = payable(address(this)).send(msg.value / 2);
+        bool success = payable(address(this)).send(amt / 2);
         require(success, "Call Failed to deposit");
 
         // Get LP Token which will be 50% of total amount
-        uint256 loanApprovedOfInWei = msg.value / 2;
+        uint256 loanApprovedOfInWei = amt / 2;
         mint(loanApprovedOfInWei);
 
         // Loan Details
         BorrowedLoanInfo[msg.sender] = LoanInfo(
             msg.sender,
             block.timestamp,
-            msg.value / 2,
+            amt / 2,
             0,
             loanApprovedOfInWei,
             EthToLP(loanApprovedOfInWei),
@@ -208,15 +208,15 @@ contract LendingPlatformWithToken is LPToken {
     // to LendingPlatform Smart Contract so that whenevery a borrower need to borrow LPs,
     // Platform will not generate new LP.
 
-    function invest() public payable {
+    function invest(uint256 amt) public payable {
         // First he has to Pay Complete Amount.
         // BUT DUE TO MINT FUNCTIONALY
         // Therefore Let Lender mint first and then transfer Minted tokens to LP.
-        mint(msg.value);
-        _transfer(msg.sender, address(this), EthToLP(msg.value));
+        mint(amt);
+        _transfer(msg.sender, address(this), EthToLP(amt));
 
         // Now Make him Pay the Crypto Investment Amount
-        bool success = payable(address(this)).send(msg.value);
+        bool success = payable(address(this)).send(amt);
         require(success, "Call Failed to Invest");
 
         // IMPORTANT Now LP has Crypto + Minted Token
@@ -227,13 +227,13 @@ contract LendingPlatformWithToken is LPToken {
 
         totalInvester += 1;
         investers.push(msg.sender);
-        addressToInvestmentAmountInWei[msg.sender] = msg.value;
+        addressToInvestmentAmountInWei[msg.sender] = amt;
 
         InvestmentInfo[msg.sender] = InvesterInfo(
             msg.sender,
-            msg.value,
+            amt,
             block.timestamp,
-            EthToLP(msg.value),
+            EthToLP(amt),
             calculateInterestToBeReturnedToInvester(),
             false
         );
@@ -331,4 +331,25 @@ contract LendingPlatformWithToken is LPToken {
         bool success = payable(owner).send(address(this).balance);
         require(success, "Failed to withdraw amount");
     }
+
+    function getContractBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getContractLPBalance() public view returns (uint256) {
+        return balanceOf(address(this));
+    }
+
+    function getMyLPBalance() public view returns (uint256) {
+        return balanceOf(msg.sender);
+    }
+
+    function getMyLoanInterest() public returns (uint256) {
+        calculateInterest();
+        return interestToBePaid[msg.sender];
+    }
+
+    // For this just call calculateInterestToBeReturnedToInvester()
+    // function getMyInvestmentInterest() public returns(uint256){
+    // }
 }
