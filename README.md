@@ -1,13 +1,6 @@
-# Sample Hardhat Project
+# Decentralized Lending Platform Project
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+Link to Website - https://LendingPlatform.yashpatel142.repl.co
+Link to PolyScan Mumbai Testnet - https://mumbai.polygonscan.com/address/0xcc22E2d7EC063eE495a52F77892b2C4CcF5F75BB
 
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+Smart Contract Address - 0xcc22E2d7EC063eE495a52F77892b2C4CcF5F75BB
