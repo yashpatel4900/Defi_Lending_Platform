@@ -1,11 +1,16 @@
 # Decentralized Lending Platform Project
 
 Link to Website - https://LendingPlatform.yashpatel142.repl.co
+Link to Video Tutorial - https://drive.google.com/file/d/1SX2Vd8NZQ5au-nTGfzQdlvUqI04LTznN/view?usp=sharing
 
 LendingPlatformWithToken Smart Contract is deployed on Polygon Testnet.
 Link to PolyScan Mumbai Testnet - https://mumbai.polygonscan.com/address/0xcc22E2d7EC063eE495a52F77892b2C4CcF5F75BB
 
 Smart Contract Address - 0xcc22E2d7EC063eE495a52F77892b2C4CcF5F75BB
+
+# Architecture
+
+<img width="826" alt="Screenshot 2022-10-26 at 6 18 33 PM" src="https://user-images.githubusercontent.com/62371168/198030035-e7d87dfa-da6e-4d33-ad4f-e74798399e7d.png">
 
 # Things you can Perform on Lending Platform
 1. Mint LP (ERC 20 Tokens) - 1 Eth will get you 1000 LP Tokens
